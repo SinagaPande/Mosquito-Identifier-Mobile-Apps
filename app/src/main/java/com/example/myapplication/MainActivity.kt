@@ -3,7 +3,7 @@ package com.example.myapplication
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color // Tambahan
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
@@ -11,7 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat // Tambahan
+import androidx.core.view.WindowCompat
 import androidx.viewpager2.widget.ViewPager2
 
 class MainActivity : AppCompatActivity() {
@@ -19,9 +19,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val PERMISSION_GRANTED_MESSAGE = "Kamera siap digunakan"
         private const val PERMISSION_DENIED_MESSAGE = "Izin kamera diperlukan untuk menggunakan kamera"
-        private const val GALLERY_SELECTED_MESSAGE = "Gambar dipilih dari galeri"
         private const val CAMERA_PERMISSION_TITLE = "Izin Kamera Diperlukan"
-        private const val CAMERA_PERMISSION_MESSAGE = "Aplikasi memerlukan akses kamera untuk mengambil foto. Izin ini hanya digunakan untuk fungsi kamera dalam aplikasi."
+        private const val CAMERA_PERMISSION_MESSAGE = "Aplikasi memerlukan akses kamera untuk mengambil foto."
         private const val OK_BUTTON = "OK"
         private const val CANCEL_BUTTON = "Batal"
     }
@@ -40,8 +39,13 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            result.data?.data?.let {
-                showToast(GALLERY_SELECTED_MESSAGE)
+            val selectedUri = result.data?.data
+            if (selectedUri != null) {
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra(ResultActivity.EXTRA_IMAGE_URI, selectedUri.toString())
+                startActivity(intent)
+            } else {
+                showToast("Gagal mengambil gambar")
             }
         }
     }
@@ -49,12 +53,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // --- TAHAP 1 & 2: MENGAKTIFKAN EDGE-TO-EDGE ---
-        // Ini wajib agar background bisa masuk ke area status bar
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
-        // ----------------------------------------------
 
         setContentView(R.layout.activity_main_with_pager)
 
@@ -65,8 +66,6 @@ class MainActivity : AppCompatActivity() {
 
         checkCameraPermission()
     }
-
-    // ... (Fungsi checkCameraPermission ke bawah TETAP SAMA, tidak perlu diubah) ...
 
     private fun checkCameraPermission() {
         when {
@@ -117,10 +116,13 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, message, duration).show()
     }
 
+    // Navigasi untuk kembali ke Home Tab
     fun navigateToHomeTab() {
         viewPager.currentItem = ViewPagerAdapter.HOME_TAB
     }
 
+    // --- PERBAIKAN: Fungsi ini yang sebelumnya hilang ---
+    // Navigasi untuk pindah ke Camera Tab (digunakan oleh HomeFragment)
     fun navigateToCameraTab() {
         viewPager.currentItem = ViewPagerAdapter.CAMERA_TAB
     }

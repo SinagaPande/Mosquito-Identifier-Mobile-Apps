@@ -21,4 +21,11 @@
 
     <!-- Error messages -->
     <string name="no_gallery_app">Tidak ada aplikasi galeri yang tersedia</string>
+    <string name="desc_result_image">Foto nyamuk yang diambil atau dipilih</string>
+    <string name="label_classification_result">Hasil Klasifikasi</string>
+    <string name="dummy_species_name">Aedes aegypti</string>
+    <string name="dummy_confidence">Confidence: 92.5%</string>
+    <string name="label_description_dummy">Deskripsi Singkat (Dummy):</string>
+    <string name="dummy_description_text">Nyamuk ini dikenal sebagai vektor utama penyebaran virus demam berdarah dengue (DBD).</string>
+    <string name="btn_retake_photo">Ambil Foto Lain</string>
 </resources>
