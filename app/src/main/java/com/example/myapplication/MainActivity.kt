@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback // Import Wajib
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -64,8 +65,30 @@ class MainActivity : AppCompatActivity() {
         viewPager.adapter = adapter
         viewPager.currentItem = ViewPagerAdapter.HOME_TAB
 
+        // --- MODIFIKASI: MENANGANI TOMBOL BACK ---
+        setupOnBackPressed()
+        // -----------------------------------------
+
         checkCameraPermission()
     }
+
+    // --- FUNGSI BARU UNTUK LOGIKA TOMBOL BACK ---
+    private fun setupOnBackPressed() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Cek apakah user sedang di Tab Kamera
+                if (viewPager.currentItem == ViewPagerAdapter.CAMERA_TAB) {
+                    // Jika ya, pindahkan ke Tab Home
+                    viewPager.currentItem = ViewPagerAdapter.HOME_TAB
+                } else {
+                    // Jika tidak (sedang di Home), lakukan fungsi back normal (keluar aplikasi)
+                    isEnabled = false // Matikan callback ini sementara
+                    onBackPressedDispatcher.onBackPressed() // Panggil default back
+                }
+            }
+        })
+    }
+    // ---------------------------------------------
 
     private fun checkCameraPermission() {
         when {
@@ -121,7 +144,6 @@ class MainActivity : AppCompatActivity() {
         viewPager.currentItem = ViewPagerAdapter.HOME_TAB
     }
 
-    // --- PERBAIKAN: Fungsi ini yang sebelumnya hilang ---
     // Navigasi untuk pindah ke Camera Tab (digunakan oleh HomeFragment)
     fun navigateToCameraTab() {
         viewPager.currentItem = ViewPagerAdapter.CAMERA_TAB
