@@ -59,12 +59,12 @@
 
     <ImageButton
         android:id="@+id/flashButton"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="66dp"
+        android:layout_height="66dp"
         android:layout_marginBottom="32dp"
         android:background="@drawable/bg_flash_button"
         android:contentDescription="Flash Toggle"
-        android:padding="8dp"
+        android:padding="16dp"
         android:rotation="-90"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_flash_off"
