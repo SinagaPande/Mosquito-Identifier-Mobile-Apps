@@ -25,4 +25,8 @@
 
     <color name="scan_border">#FFFFFF</color>
     <color name="scan_corner_glow">#80FFFFFF</color>
+
+    <color name="neon_green">#39FF14</color>
+    <color name="neon_glow_strong">#8039FF14</color>
+    <color name="neon_glow_soft">#3339FF14</color>
 </resources>
