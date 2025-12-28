@@ -9,7 +9,7 @@ class ViewPagerAdapter(fragmentActivity: FragmentActivity) :
 
     companion object {
         const val TAB_COUNT = 2
-        const val HOME_TAB = 0
+        const val HISTORY_TAB = 0
         const val CAMERA_TAB = 1
     }
 
@@ -17,7 +17,7 @@ class ViewPagerAdapter(fragmentActivity: FragmentActivity) :
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            HOME_TAB -> HomeFragment()
+            HISTORY_TAB -> HistoryFragment()
             CAMERA_TAB -> CameraFragment()
             else -> throw IllegalArgumentException("Invalid tab position: $position")
         }

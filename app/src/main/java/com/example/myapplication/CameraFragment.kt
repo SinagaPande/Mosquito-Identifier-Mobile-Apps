@@ -64,17 +64,11 @@ class CameraFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
+        // Hapus atau ubah bagian ViewCompat.setOnApplyWindowInsetsListener
+        // karena closeButton sudah dihapus dan flipCameraButton sudah dipindah
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            val closeParams = binding.closeButton.layoutParams as ViewGroup.MarginLayoutParams
-            closeParams.topMargin = 25 + systemBars.top
-            binding.closeButton.layoutParams = closeParams
-
-            val flipParams = binding.flipCameraButton.layoutParams as ViewGroup.MarginLayoutParams
-            flipParams.topMargin = 25 + systemBars.top
-            binding.flipCameraButton.layoutParams = flipParams
-
+            // Hanya atur margin untuk komponen lain jika diperlukan
+            // (tidak ada komponen di atas yang perlu margin top sekarang)
             insets
         }
 
@@ -124,9 +118,13 @@ class CameraFragment : Fragment() {
     }
 
     private fun setupButtonListeners() {
-        binding.closeButton.setOnClickListener {
-            (activity as? MainActivity)?.navigateToHomeTab()
-        }
+        // HAPUS kode berikut (karena tombol close dihapus):
+        // binding.closeButton.setOnClickListener {
+        //     (activity as? MainActivity)?.navigateToHistoryTab()
+        // }
+
+        // Tombol flipCameraButton dan flashButton tetap sama, hanya posisinya yang berubah di XML
+        // Tidak ada perubahan logika fungsionalitas
 
         binding.flipCameraButton.setOnClickListener { view ->
             animateButtonPress(view)
@@ -138,27 +136,19 @@ class CameraFragment : Fragment() {
             val icon = if (isTorchOn) R.drawable.ic_flash_on else R.drawable.ic_flash_off
             binding.flashButton.setImageResource(icon)
 
-            // MODIFIKASI:
-            // Selalu coba nyalakan LED Fisik (sesuai permintaan, apa pun kameranya)
             try {
                 camera?.cameraControl?.enableTorch(isTorchOn)
             } catch (e: Exception) {
                 Log.e(TAG, "Gagal mengubah mode torch hardware: ${e.message}")
             }
-
-            // Catatan: Overlay layar TIDAK dinyalakan di sini lagi.
-            // Overlay hanya akan nyala saat Shutter ditekan.
         }
 
         binding.shutterButton.setOnClickListener { view ->
             animateButtonPress(view)
 
-            // MODIFIKASI LOGIKA PENGAMBILAN FOTO
             if (isTorchOn && cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) {
-                // Jika Senter ON + Kamera Depan -> Pakai Screen Flash
                 takePhotoWithScreenFlash()
             } else {
-                // Jika Senter OFF atau Kamera Belakang -> Foto biasa
                 takePhoto()
             }
         }

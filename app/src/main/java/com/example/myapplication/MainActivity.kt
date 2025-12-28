@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback // Import Wajib
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -63,7 +63,9 @@ class MainActivity : AppCompatActivity() {
         viewPager = findViewById(R.id.viewPager)
         val adapter = ViewPagerAdapter(this)
         viewPager.adapter = adapter
-        viewPager.currentItem = ViewPagerAdapter.HOME_TAB
+        
+        // PERUBAHAN: Buka ke Camera Tab sebagai default
+        viewPager.currentItem = ViewPagerAdapter.CAMERA_TAB
 
         // --- MODIFIKASI: MENANGANI TOMBOL BACK ---
         setupOnBackPressed()
@@ -72,23 +74,23 @@ class MainActivity : AppCompatActivity() {
         checkCameraPermission()
     }
 
-    // --- FUNGSI BARU UNTUK LOGIKA TOMBOL BACK ---
+    // --- MODIFIKASI LOGIKA TOMBOL BACK ---
     private fun setupOnBackPressed() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Cek apakah user sedang di Tab Kamera
+                // Cek apakah user sedang di Tab Camera
                 if (viewPager.currentItem == ViewPagerAdapter.CAMERA_TAB) {
-                    // Jika ya, pindahkan ke Tab Home
-                    viewPager.currentItem = ViewPagerAdapter.HOME_TAB
+                    // Jika ya, pindahkan ke Tab History
+                    viewPager.currentItem = ViewPagerAdapter.HISTORY_TAB
                 } else {
-                    // Jika tidak (sedang di Home), lakukan fungsi back normal (keluar aplikasi)
+                    // Jika tidak (sedang di History), lakukan fungsi back normal (keluar aplikasi)
                     isEnabled = false // Matikan callback ini sementara
                     onBackPressedDispatcher.onBackPressed() // Panggil default back
                 }
             }
         })
     }
-    // ---------------------------------------------
+    // -------------------------------------
 
     private fun checkCameraPermission() {
         when {
@@ -139,12 +141,12 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, message, duration).show()
     }
 
-    // Navigasi untuk kembali ke Home Tab
-    fun navigateToHomeTab() {
-        viewPager.currentItem = ViewPagerAdapter.HOME_TAB
+    // Navigasi untuk kembali ke History Tab (sebelumnya Home Tab)
+    fun navigateToHistoryTab() {
+        viewPager.currentItem = ViewPagerAdapter.HISTORY_TAB
     }
 
-    // Navigasi untuk pindah ke Camera Tab (digunakan oleh HomeFragment)
+    // Navigasi untuk pindah ke Camera Tab
     fun navigateToCameraTab() {
         viewPager.currentItem = ViewPagerAdapter.CAMERA_TAB
     }

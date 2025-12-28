@@ -1,30 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Primary colors for Mosquito Identifier app -->
-    <color name="primary">#3F51B5</color>      <!-- Indigo -->
+    <color name="primary">#3F51B5</color>
     <color name="primary_dark">#303F9F</color>
     <color name="primary_light">#C5CAE9</color>
 
-    <!-- Secondary/Accent colors -->
-    <color name="secondary">#4CAF50</color>    <!-- Green -->
+    <color name="secondary">#4CAF50</color>
     <color name="secondary_dark">#388E3C</color>
     <color name="secondary_light">#C8E6C9</color>
 
-    <!-- Background colors -->
     <color name="background">#FFFFFF</color>
     <color name="surface">#FFFFFF</color>
 
-    <!-- Text colors -->
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
 
-    <!-- Error color -->
     <color name="error">#F44336</color>
 
-    <color name="overlay_dark">#99000000</color>
+    <color name="overlay_dark">#B3000000</color> <color name="panel_gradient_start">#00000000</color> <color name="panel_gradient_end">#CC000000</color>   <color name="flash_bg_off">#66000000</color>
+    <color name="flash_bg_on">#FFFFFFFF</color>
+    <color name="flash_icon_on">#FFD600</color>
+
     <color name="scan_border">#FFFFFF</color>
+    <color name="scan_corner_glow">#80FFFFFF</color>
 </resources>
