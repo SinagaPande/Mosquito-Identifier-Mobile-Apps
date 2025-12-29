@@ -21,13 +21,17 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import androidx.camera.core.ImageProxy
 import com.example.myapplication.databinding.FragmentCameraBinding
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.min
 
 class CameraFragment : Fragment() {
 
@@ -39,17 +43,12 @@ class CameraFragment : Fragment() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var scaleGestureDetector: ScaleGestureDetector
 
-    // --- VARIABEL UNTUK FLIP CAMERA ---
     private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-    // ----------------------------------
-
     private var isTorchOn = false
 
     private companion object {
         private const val TAG = "CameraFragment"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val IMAGE_JPEG = "image/jpeg"
-        private const val PICTURES_PATH = "Pictures/CameraX-App"
     }
 
     override fun onCreateView(
@@ -64,11 +63,7 @@ class CameraFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // Hapus atau ubah bagian ViewCompat.setOnApplyWindowInsetsListener
-        // karena closeButton sudah dihapus dan flipCameraButton sudah dipindah
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-            // Hanya atur margin untuk komponen lain jika diperlukan
-            // (tidak ada komponen di atas yang perlu margin top sekarang)
             insets
         }
 
@@ -92,16 +87,12 @@ class CameraFragment : Fragment() {
 
         binding.cameraPreview.setOnTouchListener { view, event ->
             scaleGestureDetector.onTouchEvent(event)
-
             if (event.pointerCount > 1) {
                 view.parent.requestDisallowInterceptTouchEvent(true)
             } else if (event.action == MotionEvent.ACTION_UP) {
                 view.parent.requestDisallowInterceptTouchEvent(false)
                 view.performClick()
-            } else if (event.action == MotionEvent.ACTION_CANCEL) {
-                view.parent.requestDisallowInterceptTouchEvent(false)
             }
-
             return@setOnTouchListener true
         }
     }
@@ -118,14 +109,6 @@ class CameraFragment : Fragment() {
     }
 
     private fun setupButtonListeners() {
-        // HAPUS kode berikut (karena tombol close dihapus):
-        // binding.closeButton.setOnClickListener {
-        //     (activity as? MainActivity)?.navigateToHistoryTab()
-        // }
-
-        // Tombol flipCameraButton dan flashButton tetap sama, hanya posisinya yang berubah di XML
-        // Tidak ada perubahan logika fungsionalitas
-
         binding.flipCameraButton.setOnClickListener { view ->
             animateButtonPress(view)
             flipCamera()
@@ -135,17 +118,11 @@ class CameraFragment : Fragment() {
             isTorchOn = !isTorchOn
             val icon = if (isTorchOn) R.drawable.ic_flash_on else R.drawable.ic_flash_off
             binding.flashButton.setImageResource(icon)
-
-            try {
-                camera?.cameraControl?.enableTorch(isTorchOn)
-            } catch (e: Exception) {
-                Log.e(TAG, "Gagal mengubah mode torch hardware: ${e.message}")
-            }
+            try { camera?.cameraControl?.enableTorch(isTorchOn) } catch (e: Exception) {}
         }
 
         binding.shutterButton.setOnClickListener { view ->
             animateButtonPress(view)
-
             if (isTorchOn && cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA) {
                 takePhotoWithScreenFlash()
             } else {
@@ -159,107 +136,79 @@ class CameraFragment : Fragment() {
         }
     }
 
-    // --- FUNGSI BARU: Screen Flash saat Shutter ditekan ---
     private fun takePhotoWithScreenFlash() {
-        // 1. Nyalakan Layar Putih & Brightness Max
         toggleScreenTorch(true)
-
-        // 2. Beri jeda sedikit (misal 150ms) agar layar sempat terang maksimal sebelum capture
         binding.root.postDelayed({
             val imageCapture = this.imageCapture ?: return@postDelayed
-
-            // Persiapan file output
-            val outputOptions = createOutputOptions()
-
             imageCapture.takePicture(
-                outputOptions,
                 ContextCompat.getMainExecutor(requireContext()),
-                object : ImageCapture.OnImageSavedCallback {
+                object : ImageCapture.OnImageCapturedCallback() {
+                    override fun onCaptureSuccess(image: ImageProxy) {
+                        toggleScreenTorch(false)
+                        processCapturedImage(image)
+                    }
+
                     override fun onError(exc: ImageCaptureException) {
                         Log.e(TAG, "Gagal mengambil foto: ${exc.message}", exc)
                         showToast("Gagal mengambil foto")
-                        // Kembalikan layar ke normal jika error
                         toggleScreenTorch(false)
-                    }
-
-                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                        // Kembalikan layar ke normal SEGERA setelah foto tersimpan
-                        toggleScreenTorch(false)
-
-                        val savedUri = outputFileResults.savedUri ?: return
-                        navigateToResult(savedUri.toString())
                     }
                 }
             )
-        }, 150) // Delay 150ms
+        }, 150)
     }
-    // ------------------------------------------------------
 
     private fun takePhoto() {
         val imageCapture = this.imageCapture ?: return
-        val outputOptions = createOutputOptions()
-
         imageCapture.takePicture(
-            outputOptions,
             ContextCompat.getMainExecutor(requireContext()),
-            object : ImageCapture.OnImageSavedCallback {
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    processCapturedImage(image)
+                }
+
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Gagal mengambil foto: ${exc.message}", exc)
                     showToast("Gagal mengambil foto")
-                }
-
-                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    val savedUri = outputFileResults.savedUri ?: return
-                    navigateToResult(savedUri.toString())
                 }
             }
         )
     }
 
-    // Helper untuk membuat opsi file output (agar kode tidak duplikat)
-    private fun createOutputOptions(): ImageCapture.OutputFileOptions {
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, IMAGE_JPEG)
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, PICTURES_PATH)
+    private fun processCapturedImage(image: ImageProxy) {
+        // Proses crop di background thread agar tidak nge-lag UI
+        cameraExecutor.execute {
+            val croppedBitmap = cropImageToScanArea(image)
+            image.close() // Jangan lupa close ImageProxy
+
+            // Simpan bitmap dan pindah activity di UI Thread
+            val uriString = saveBitmapToUri(croppedBitmap)
+            croppedBitmap.recycle()
+
+            activity?.runOnUiThread {
+                navigateToResult(uriString)
             }
         }
-        return ImageCapture.OutputFileOptions
-            .Builder(requireContext().contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            .build()
     }
 
     private fun navigateToResult(uriString: String) {
-        activity?.runOnUiThread {
-            val context = requireContext()
-            val intent = Intent(context, ResultActivity::class.java)
-            intent.putExtra(ResultActivity.EXTRA_IMAGE_URI, uriString)
-            startActivity(intent)
-        }
+        val context = requireContext()
+        val intent = Intent(context, ResultActivity::class.java)
+        intent.putExtra(ResultActivity.EXTRA_IMAGE_URI, uriString)
+        startActivity(intent)
     }
 
     private fun toggleScreenTorch(isOn: Boolean) {
         activity?.runOnUiThread {
             binding.screenFlashOverlay.visibility = if (isOn) View.VISIBLE else View.GONE
-
             val window = requireActivity().window
             val layoutParams = window.attributes
-            if (isOn) {
-                layoutParams.screenBrightness = 1.0f // Max brightness
-            } else {
-                layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE // Reset
-            }
+            layoutParams.screenBrightness = if (isOn) 1.0f else WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
             window.attributes = layoutParams
         }
     }
 
     private fun flipCamera() {
-        // Matikan senter fisik sebelum switch (agar tidak error state)
-        // State tombol di UI (isTorchOn) biarkan tetap, atau reset sesuai preferensi.
-        // Di sini saya reset agar aman.
         isTorchOn = false
         binding.flashButton.setImageResource(R.drawable.ic_flash_off)
         try { camera?.cameraControl?.enableTorch(false) } catch (e: Exception) {}
@@ -284,7 +233,6 @@ class CameraFragment : Fragment() {
         if (mainActivity?.hasCameraPermission() == true) {
             startCamera()
         } else {
-            showToast("Meminta izin kamera...")
             mainActivity?.requestCameraPermission()
             binding.cameraPreview.visibility = View.GONE
         }
@@ -296,11 +244,9 @@ class CameraFragment : Fragment() {
 
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
             val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
             }
-
             imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
@@ -310,18 +256,13 @@ class CameraFragment : Fragment() {
                 camera = cameraProvider.bindToLifecycle(
                     viewLifecycleOwner, cameraSelector, preview, imageCapture
                 )
-
                 binding.flashButton.alpha = 1.0f
                 camera?.cameraControl?.setZoomRatio(1.0f)
-
-                // Reset torch state saat inisialisasi awal
                 isTorchOn = false
                 binding.flashButton.setImageResource(R.drawable.ic_flash_off)
                 camera?.cameraControl?.enableTorch(false)
                 toggleScreenTorch(false)
-
                 binding.cameraPreview.visibility = View.VISIBLE
-
             } catch (exc: Exception) {
                 Log.e(TAG, "Gagal bind use case", exc)
             }
@@ -340,5 +281,83 @@ class CameraFragment : Fragment() {
         toggleScreenTorch(false)
         cameraExecutor.shutdown()
         _binding = null
+    }
+
+    // --- LOGIKA CROP YANG DIPERBAIKI ---
+    private fun cropImageToScanArea(image: ImageProxy): Bitmap {
+        val buffer = image.planes[0].buffer
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
+        val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+        // 1. Putar gambar jika perlu (misal: mode portrait biasanya perlu rotasi 90 derajat)
+        val rotationDegrees = image.imageInfo.rotationDegrees
+        val rotatedBitmap = if (rotationDegrees != 0) {
+            rotateBitmap(originalBitmap, rotationDegrees.toFloat())
+        } else {
+            originalBitmap
+        }
+        if (rotatedBitmap != originalBitmap) originalBitmap.recycle()
+
+        // 2. Hitung Ukuran Crop (Persegi)
+        // Kita ingin mengambil 65% dari lebar (sesuai ScannerOverlayView)
+        // Karena preview mengisi layar, kita asumsikan gambar penuh, lalu crop tengahnya.
+        val bitmapWidth = rotatedBitmap.width
+        val bitmapHeight = rotatedBitmap.height
+
+        // Ambil dimensi terkecil untuk referensi (agar aman di portrait/landscape)
+        val minDimension = min(bitmapWidth, bitmapHeight)
+
+        // Ukuran kotak crop = 65% dari lebar gambar (asumsi portrait) atau 65% dari minDimension
+        // Overlay di view = width * 0.65f.
+        // Kita terapkan rasio yang sama ke bitmap yang ditangkap.
+        val cropSize = (minDimension * 0.65f).toInt()
+
+        // 3. Tentukan titik tengah
+        val centerX = bitmapWidth / 2
+        val centerY = bitmapHeight / 2
+
+        // 4. Hitung koordinat kiri-atas (left, top)
+        val cropLeft = (centerX - (cropSize / 2)).coerceAtLeast(0)
+        val cropTop = (centerY - (cropSize / 2)).coerceAtLeast(0)
+
+        // 5. Pastikan tidak keluar batas
+        val finalWidth = if (cropLeft + cropSize > bitmapWidth) bitmapWidth - cropLeft else cropSize
+        val finalHeight = if (cropTop + cropSize > bitmapHeight) bitmapHeight - cropTop else cropSize
+
+        // 6. Lakukan Crop
+        return Bitmap.createBitmap(
+            rotatedBitmap,
+            cropLeft,
+            cropTop,
+            finalWidth,
+            finalHeight
+        )
+    }
+
+    private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(angle)
+        return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+    }
+
+    private fun saveBitmapToUri(bitmap: Bitmap): String {
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+            .format(System.currentTimeMillis())
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-App")
+            }
+        }
+        val resolver = requireContext().contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        uri?.let {
+            resolver.openOutputStream(it)?.use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            }
+        }
+        return uri?.toString() ?: ""
     }
 }

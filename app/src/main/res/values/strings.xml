@@ -1,31 +1,30 @@
 <resources>
     <string name="app_name">Mosquito Identifier</string>
 
-    <!-- Permission related strings -->
     <string name="camera_permission_granted">Kamera siap digunakan</string>
     <string name="camera_permission_denied">Izin kamera diperlukan untuk menggunakan kamera</string>
     <string name="requesting_camera_permission">Meminta izin kamera…</string>
     <string name="gallery_selected">Gambar dipilih dari galeri</string>
 
-    <!-- Dialog strings -->
     <string name="camera_permission_title">Izin Kamera Diperlukan</string>
     <string name="camera_permission_message">Aplikasi memerlukan akses kamera untuk mengambil foto. Izin ini hanya digunakan untuk fungsi kamera dalam aplikasi.</string>
     <string name="ok">OK</string>
     <string name="cancel">Batal</string>
 
-    <!-- Camera fragment strings -->
     <string name="camera_not_ready">Kamera belum siap</string>
     <string name="camera_start_failed">Gagal memulai kamera</string>
     <string name="photo_capture_failed">Gagal mengambil foto</string>
     <string name="photo_saved_success">Foto berhasil disimpan</string>
 
-    <!-- Error messages -->
     <string name="no_gallery_app">Tidak ada aplikasi galeri yang tersedia</string>
+    
+    <string name="error_load_image">Gagal memuat gambar</string>
     <string name="desc_result_image">Foto nyamuk yang diambil atau dipilih</string>
     <string name="label_classification_result">Hasil Klasifikasi</string>
-    <string name="dummy_species_name">Aedes aegypti</string>
-    <string name="dummy_confidence">Akurasi: 92.5%</string>
-    <string name="label_description_dummy">Deskripsi Singkat :</string>
-    <string name="dummy_description_text">Nyamuk ini dikenal sebagai vektor utama penyebaran virus demam berdarah dengue (DBD).</string>
+    
+    <string name="species_aedes_aegypti">Aedes aegypti</string>
+    <string name="accuracy_format">Akurasi: %1$d%%</string> 
+    <string name="desc_aedes_aegypti">Nyamuk ini adalah vektor utama demam berdarah (DBD). Merupakan pembawa virus dengue yang dapat menyebabkan penyakit serius.</string>
+    
     <string name="btn_retake_photo">Ambil Foto Lain</string>
 </resources>

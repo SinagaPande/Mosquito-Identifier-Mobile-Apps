@@ -19,7 +19,10 @@
 
     <color name="error">#F44336</color>
 
-    <color name="overlay_dark">#B3000000</color> <color name="panel_gradient_start">#00000000</color> <color name="panel_gradient_end">#CC000000</color>   <color name="flash_bg_off">#66000000</color>
+    <color name="overlay_dark">#B3000000</color>
+    <color name="panel_gradient_start">#00000000</color>
+    <color name="panel_gradient_end">#CC000000</color>
+    <color name="flash_bg_off">#66000000</color>
     <color name="flash_bg_on">#FFFFFFFF</color>
     <color name="flash_icon_on">#FFD600</color>
 
@@ -29,4 +32,9 @@
     <color name="neon_green">#39FF14</color>
     <color name="neon_glow_strong">#8039FF14</color>
     <color name="neon_glow_soft">#3339FF14</color>
+
+    <color name="result_background">#e7eaef</color>
+    <color name="result_text_dark">#393c41</color>
+    <color name="result_species_teal">#05baae</color>
+    <color name="result_btn_blue">#2196F3</color>
 </resources>
